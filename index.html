@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Hair Week — Rio + SP</title>
+<meta name="description" content="Pop-ups escondidos pelo Rio e por São Paulo. Vire Hair Hunter, descubra seu tipo de cabelo e dispute seu ingresso para a sunset party.">
+<meta property="og:title" content="Hair Week — go hunt!">
+<meta property="og:description" content="Seis pop-ups escondidos no Rio e em São Paulo. Cace, descubra seu cabelo e dispute o ingresso para a sunset party.">
+<meta property="og:type" content="website">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<style>html,body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>
+  /* Layout: pôr do sol carioca de cima a baixo — o fundo vai da noite roxa ao sol
+     manga conforme você desce. Tipografia pesada da marca sobre faixas translúcidas,
+     onda do calçadão de Copacabana como separador e o coral da marca como acento. */
+  :root{
+    --night:#24093A;
+    --dusk:#5E1253;
+    --rose:#C52A66;
+    --coral:#EE4B4E;
+    --mango:#FF8A3D;
+    --amber:#FFC247;
+    --aqua:#2ED3C6;
+    --lime:#52C288;
+    --cream:#FFF4E8;
+    --ink:#1B0726;
+    --fg:#FFF4E8;
+    --fg-soft:rgba(255,244,232,.74);
+    --glass:rgba(255,244,232,.10);
+    --glass-line:rgba(255,244,232,.26);
+    --display:"Archivo Black","Arial Black",Impact,system-ui,sans-serif;
+    --body:"Archivo","Helvetica Neue",Arial,system-ui,sans-serif;
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box}
+  body{
+    color:var(--fg);font-family:var(--body);font-size:16px;line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(120% 70% at 50% 6%, rgba(255,194,71,.30) 0%, rgba(255,138,61,.18) 26%, rgba(255,138,61,0) 56%),
+      linear-gradient(180deg,
+        #24093A 0%, #3B0D49 14%, #5E1253 30%,
+        #9C1F5C 46%, #C52A66 58%, #EE4B4E 70%,
+        #FF8A3D 85%, #FFC247 100%);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  h1,h2,h3{font-family:var(--display);font-weight:400;text-transform:uppercase;letter-spacing:-.02em;line-height:.92;text-wrap:balance;margin:0}
+  p{margin:0}
+  a{color:inherit}
+  .eyebrow{font-family:var(--body);font-weight:700;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase}
+
+  /* ---------- barra ---------- */
+  .topbar{border-bottom:1px solid var(--glass-line);background:rgba(36,9,58,.55);backdrop-filter:blur(8px)}
+  .topbar .wrap{padding-block:14px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .mark{font-family:var(--display);font-size:.95rem;letter-spacing:.04em;text-transform:uppercase;line-height:1.1}
+  .mark small{display:block;font-family:var(--body);font-weight:600;font-size:.6rem;letter-spacing:.42em;color:var(--fg-soft)}
+  .topbar .eyebrow{color:var(--amber)}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;overflow:hidden}
+  .hero .wrap{padding-block:clamp(40px,8vw,84px);position:relative;z-index:2}
+  .sundisc{position:absolute;z-index:0;left:50%;top:clamp(40px,10vw,90px);width:min(560px,92vw);aspect-ratio:1;transform:translateX(-50%);
+    background:radial-gradient(circle at 50% 50%, rgba(255,222,140,.95) 0%, rgba(255,186,80,.55) 34%, rgba(255,138,61,.18) 58%, rgba(255,138,61,0) 70%);
+    pointer-events:none}
+  .echo{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;display:flex;flex-direction:column;justify-content:center}
+  .echo span{font-family:var(--display);text-transform:uppercase;font-size:clamp(3.4rem,13vw,10rem);line-height:.86;white-space:nowrap;color:transparent;-webkit-text-stroke:1.5px rgba(255,244,232,.17)}
+  .echo span:nth-child(2){transform:translateX(-7%)}
+  .echo span:nth-child(3){transform:translateX(5%)}
+  .hero h1{font-size:clamp(3rem,12.5vw,8.6rem);line-height:.84;text-shadow:0 6px 40px rgba(36,9,58,.45)}
+  .hero h1 em{font-style:normal;color:var(--amber)}
+  .hero-sub{margin-top:18px;max-width:34em;font-size:clamp(1rem,1.6vw,1.2rem);color:var(--fg-soft)}
+  .hero-meta{margin-top:26px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{border:2px solid var(--glass-line);background:var(--glass);padding:7px 13px;font-weight:700;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;backdrop-filter:blur(4px)}
+  .chip.fill{background:var(--coral);border-color:var(--coral);color:#fff}
+  .chip.gold{background:var(--amber);border-color:var(--amber);color:var(--ink)}
+  .chip.sea{background:var(--aqua);border-color:var(--aqua);color:var(--ink)}
+  .hero-cta{margin-top:30px;display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+
+  .btn{display:inline-flex;align-items:center;gap:10px;background:var(--amber);color:var(--ink);border:none;font-family:var(--display);text-transform:uppercase;font-size:1rem;letter-spacing:.02em;padding:16px 26px;cursor:pointer;text-decoration:none;box-shadow:0 10px 30px rgba(36,9,58,.35);transition:transform .16s ease, background .16s ease}
+  .btn:hover{transform:translateY(-2px);background:#FFD36B}
+  .btn:focus-visible{outline:3px solid var(--fg);outline-offset:3px}
+  .btn[disabled]{opacity:.6;cursor:not-allowed;transform:none}
+
+  .counter{display:flex;align-items:baseline;gap:9px;font-size:.9rem;color:var(--fg-soft)}
+  .counter b{font-family:var(--display);font-size:1.7rem;color:var(--amber);font-variant-numeric:tabular-nums}
+
+  /* onda do calçadão */
+  .wave{display:block;width:100%;height:clamp(26px,4vw,44px);opacity:.85}
+
+  /* ---------- seções ---------- */
+  .sec .wrap{padding-block:clamp(42px,6vw,76px)}
+  .sec h2{font-size:clamp(1.9rem,4.8vw,3.4rem)}
+  .lead{margin-top:14px;max-width:50ch;color:var(--fg-soft)}
+  .tintA{background:rgba(36,9,58,.34)}
+  .tintB{background:rgba(27,7,38,.22)}
+
+  .steps{margin-top:36px;display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:14px}
+  .step{border:1px solid var(--glass-line);background:var(--glass);backdrop-filter:blur(6px);padding:22px 20px 26px;min-width:0}
+  .step .num{font-family:var(--display);font-size:2.6rem;line-height:1;color:var(--amber)}
+  .step:nth-child(2) .num{color:var(--aqua)}
+  .step:nth-child(3) .num{color:var(--lime)}
+  .step:nth-child(4) .num{color:var(--coral)}
+  .step h3{margin-top:10px;font-size:1.05rem;letter-spacing:0}
+  .step p{margin-top:8px;font-size:.92rem;color:var(--fg-soft)}
+
+  .popups{margin-top:34px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+  .popup{border:1px solid var(--glass-line);background:var(--glass);backdrop-filter:blur(6px);padding:20px;display:flex;flex-direction:column;gap:8px;min-width:0}
+  .popup .city{font-weight:700;font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+  .popup h3{font-size:1.3rem}
+  .popup .days{font-weight:600;font-size:.88rem}
+  .popup .hint{font-size:.85rem;color:var(--fg-soft)}
+  .popup .seal{margin-top:6px;align-self:flex-start;background:var(--aqua);color:var(--ink);font-weight:700;font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;padding:5px 9px}
+
+  .note{margin-top:26px;border-left:6px solid var(--amber);padding:4px 0 4px 16px;max-width:60ch;font-size:.95rem}
+
+  /* ---------- festa ---------- */
+  .party{background:
+      radial-gradient(90% 60% at 80% 0%, rgba(46,211,198,.16) 0%, rgba(46,211,198,0) 60%),
+      linear-gradient(180deg, rgba(20,5,32,.92), rgba(20,5,32,.82));
+    position:relative;overflow:hidden}
+  .party .wrap{padding-block:clamp(50px,7vw,88px);position:relative;z-index:1}
+  .party h2{font-size:clamp(2rem,5.6vw,4.2rem)}
+  .party h2 em{font-style:normal;color:var(--mango)}
+  .perks{margin-top:34px;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:18px}
+  .perk{border-top:3px solid var(--coral);padding-top:12px;min-width:0}
+  .perk:nth-child(2){border-color:var(--amber)}
+  .perk:nth-child(3){border-color:var(--aqua)}
+  .perk:nth-child(4){border-color:var(--lime)}
+  .perk h3{font-size:1rem}
+  .perk p{margin-top:6px;font-size:.88rem;color:var(--fg-soft)}
+  .mystery{margin-top:44px;border:2px dashed var(--amber);background:linear-gradient(135deg, rgba(255,194,71,.10), rgba(238,75,78,.06));padding:clamp(24px,4vw,44px);display:grid;grid-template-columns:auto 1fr;gap:clamp(20px,4vw,44px);align-items:center}
+  @media (max-width:700px){.mystery{grid-template-columns:1fr;gap:18px}}
+  .mystery .q{font-family:var(--display);font-size:clamp(6rem,17vw,12rem);line-height:.8;color:var(--amber);text-shadow:0 0 60px rgba(255,194,71,.45)}
+  .mystery-body{min-width:0}
+  .mystery h3{font-size:clamp(1.8rem,5vw,3.2rem);margin-top:8px}
+  .mystery p{margin-top:14px;font-size:clamp(.95rem,1.4vw,1.1rem);color:var(--fg-soft);max-width:46ch}
+  .redacted{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .redacted span{display:block;height:clamp(22px,3.4vw,30px);background:repeating-linear-gradient(90deg, rgba(255,244,232,.34) 0 14px, rgba(255,244,232,.16) 14px 28px);filter:blur(3px)}
+  .redacted span:nth-child(1){width:clamp(90px,16vw,150px)}
+  .redacted span:nth-child(2){width:clamp(60px,10vw,96px)}
+  .redacted span:nth-child(3){width:clamp(120px,20vw,190px)}
+  .redacted em{font-style:normal;font-weight:700;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--amber)}
+
+  /* ---------- formulário ---------- */
+  .form-grid{margin-top:32px;display:grid;grid-template-columns:1.05fr .95fr;gap:30px;align-items:start}
+  @media (max-width:860px){.form-grid{grid-template-columns:1fr;gap:24px}}
+  .panel{background:var(--cream);color:var(--ink);padding:clamp(22px,3vw,32px);min-width:0}
+  .panel h3{font-size:1.5rem}
+  form{display:grid;gap:16px;min-width:0}
+  .field{display:grid;gap:6px;min-width:0}
+  label{font-weight:700;font-size:.76rem;letter-spacing:.12em;text-transform:uppercase}
+  input,select{font-family:var(--body);font-size:1rem;padding:13px 14px;border:2px solid var(--ink);background:#fff;color:var(--ink);width:100%;border-radius:0}
+  input:focus,select:focus{outline:3px solid var(--coral);outline-offset:0}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:520px){.row2{grid-template-columns:1fr}}
+  .consent{display:flex;gap:10px;align-items:flex-start;font-size:.85rem;color:#5A4A55;font-weight:400;letter-spacing:0;text-transform:none}
+  .consent input{width:18px;height:18px;flex:0 0 auto;margin-top:2px;accent-color:var(--coral)}
+  .panel .btn{background:var(--coral);color:#fff;justify-content:center}
+  .panel .btn:hover{background:#D8373A}
+  .msg{font-size:.9rem;font-weight:600}
+  .msg.err{color:#C0252A}
+  .side ul{margin:16px 0 0;padding-left:18px;display:grid;gap:10px;font-size:.92rem;color:var(--fg-soft)}
+  .side li::marker{color:var(--amber)}
+  .ticket{margin-top:22px;border:2px solid var(--amber);background:rgba(255,194,71,.10);padding:16px;display:none}
+  .ticket.on{display:block}
+  .ticket .eyebrow{color:var(--amber)}
+  .ticket .code{font-family:var(--display);font-size:2rem;margin-top:4px;font-variant-numeric:tabular-nums}
+  .ticket .hint{font-size:.85rem;color:var(--fg-soft);margin-top:6px}
+
+  footer{background:rgba(27,7,38,.30)}
+  footer .wrap{padding-block:30px;display:flex;flex-wrap:wrap;gap:16px;justify-content:space-between;align-items:center;font-size:.8rem;color:var(--fg-soft)}
+  .disclaimer{max-width:56ch}
+
+  @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="mark">Hair Week<small>Go Hunt</small></div>
+    <span class="eyebrow">Hair Week · Rio + SP · 2027</span>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="sundisc" aria-hidden="true"></div>
+  <div class="echo" aria-hidden="true"><span>HAIR WEEK</span><span>HAIR WEEK</span><span>HAIR WEEK</span></div>
+  <div class="wrap">
+    <p class="eyebrow" style="color:var(--amber)">Rio de Janeiro · São Paulo</p>
+    <h1>Hair Week<br><em>go hunt!</em></h1>
+    <p class="hero-sub">Pop-ups escondidos pela cidade, entre a praia e a ladeira. Ache um, descubra qual é o seu tipo de cabelo de verdade, teste a rotina de cuidado feita para ele e chegue mais perto da sunset party da Hair Week.</p>
+    <div class="hero-meta">
+      <span class="chip fill">Hair Hunters</span>
+      <span class="chip gold">6 pop-ups</span>
+      <span class="chip">Abertos vários dias</span>
+      <span class="chip sea">Sunset party</span>
+    </div>
+    <div class="hero-cta">
+      <a class="btn" href="#inscricao">Quero ser Hair Hunter</a>
+      <div class="counter"><b id="count">—</b><span id="count-label">carregando inscrições</span></div>
+    </div>
+  </div>
+</header>
+
+<svg class="wave" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true">
+  <path d="M0 24 C 60 0, 120 48, 180 24 S 300 0, 360 24 S 480 48, 540 24 S 660 0, 720 24 S 840 48, 900 24 S 1020 0, 1080 24 S 1200 48, 1260 24" fill="none" stroke="rgba(255,244,232,.55)" stroke-width="7"/>
+  <path d="M0 40 C 60 16, 120 64, 180 40 S 300 16, 360 40 S 480 64, 540 40 S 660 16, 720 40 S 840 64, 900 40 S 1020 16, 1080 40 S 1200 64, 1260 40" fill="none" stroke="rgba(27,7,38,.45)" stroke-width="7"/>
+</svg>
+
+<section class="sec tintA">
+  <div class="wrap">
+    <p class="eyebrow" style="color:var(--fg-soft)">Como funciona</p>
+    <h2>Cace, carimbe,<br>suba de nível</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="num">01</div>
+        <h3>Siga as pistas</h3>
+        <p>Todo dia a gente libera uma pista no WhatsApp e no perfil da marca. A pista leva a um dos pop-ups da Hair Week.</p>
+      </div>
+      <div class="step">
+        <div class="num">02</div>
+        <h3>Conheça seu cabelo</h3>
+        <p>Um cabeleireiro lê a sua fibra e o seu histórico químico no próprio pop-up: tipo, porosidade e o que as últimas colorações fizeram.</p>
+      </div>
+      <div class="step">
+        <div class="num">03</div>
+        <h3>Teste sua rotina</h3>
+        <p>Você testa ali a rotina montada para o seu diagnóstico, da limpeza ao tratamento, aplicada por quem usa no salão.</p>
+      </div>
+      <div class="step">
+        <div class="num">04</div>
+        <h3>Quanto mais caçar, mais perto</h3>
+        <p>Cada pop-up que você caça soma uma chance de ganhar o ingresso para a sunset party. Quanto mais pop-ups percorrer, mais chances você tem.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec tintB">
+  <div class="wrap">
+    <p class="eyebrow" style="color:var(--fg-soft)">O mapa</p>
+    <h2>Seis pop-ups,<br>vários dias cada um</h2>
+    <p class="lead">Não são ativações de um dia só. Cada pop-up fica quatro dias no seu bairro, então dá para caçar no seu ritmo durante as duas semanas.</p>
+    <div class="popups">
+      <div class="popup"><span class="city">Rio de Janeiro</span><h3>Ipanema</h3><p class="days">Qua 10 – Sáb 13 de março · 11h–20h</p><p class="hint">Pista: onde a areia muda de nome duas vezes.</p><span class="seal">Carimbo 1</span></div>
+      <div class="popup"><span class="city">Rio de Janeiro</span><h3>Botafogo</h3><p class="days">Sex 12 – Seg 15 de março · 12h–21h</p><p class="hint">Pista: o pátio que olha o morro de baixo.</p><span class="seal">Carimbo 2</span></div>
+      <div class="popup"><span class="city">Rio de Janeiro</span><h3>Barra da Tijuca</h3><p class="days">Dom 14 – Qua 17 de março · 11h–20h</p><p class="hint">Pista: o quilômetro que todo mundo corre na ida e ninguém na volta.</p><span class="seal">Carimbo 3</span></div>
+      <div class="popup"><span class="city">São Paulo</span><h3>Vila Madalena</h3><p class="days">Qua 17 – Sáb 20 de março · 12h–21h</p><p class="hint">Pista: a rua que é uma galeria sem portas.</p><span class="seal">Carimbo 4</span></div>
+      <div class="popup"><span class="city">São Paulo</span><h3>Pinheiros</h3><p class="days">Sex 19 – Seg 22 de março · 12h–21h</p><p class="hint">Pista: onde o mercado cheira a fruta e a café ao mesmo tempo.</p><span class="seal">Carimbo 5</span></div>
+      <div class="popup"><span class="city">São Paulo</span><h3>Jardins</h3><p class="days">Dom 21 – Qua 24 de março · 11h–20h</p><p class="hint">Pista: a vitrine em que o cabelo é o produto.</p><span class="seal">Carimbo 6</span></div>
+    </div>
+    <p class="note">O endereço exato de cada pop-up só vai para os Hair Hunters inscritos. Chega na manhã em que abre o pop-up mais perto de você.</p>
+  </div>
+</section>
+
+<section class="sec party">
+  <div class="wrap">
+    <p class="eyebrow" style="color:var(--mango)">O encerramento</p>
+    <h2>Sunset party<br><em>na praia</em></h2>
+    <p class="lead">O sol caindo sobre o mar, a Hair Week fechando e a marca montando a festa. Não tem lista nem porta aberta: entra quem ganhou o ingresso caçando pop-ups.</p>
+    <div class="perks">
+      <div class="perk"><h3>Caipirinhas</h3><p>Bar aberto enquanto o sol desce.</p></div>
+      <div class="perk"><h3>DJ ao vivo</h3><p>Funk, samba-rock e dança até a luz apagar.</p></div>
+      <div class="perk"><h3>Ativações</h3><p>Rotinas de cuidado, retoques e cor ao vivo com cabeleireiros convidados.</p></div>
+      <div class="perk"><h3>Show de drones</h3><p>O símbolo da Hair Week desenhado no céu sobre o mar.</p></div>
+    </div>
+    <div class="mystery">
+      <span class="q" aria-hidden="true">?</span>
+      <div class="mystery-body">
+        <p class="eyebrow" style="color:var(--amber)">Convidado surpresa</p>
+        <h3>Quem fecha<br>a noite?</h3>
+        <div class="redacted" aria-hidden="true"><span></span><span></span><span></span><em>confidencial</em></div>
+        <p>Um nome grande da música brasileira sobe no palco depois que o sol se põe. A gente não anuncia, não está no line-up e ninguém de fora vai saber até tocar. O único aviso sai por e-mail no mesmo dia, só para quem tiver ingresso.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="inscricao">
+  <div class="wrap">
+    <p class="eyebrow" style="color:var(--fg-soft)">Inscrição</p>
+    <h2>Vire<br>Hair Hunter</h2>
+    <p class="lead">Deixe seus dados e entre no grupo dos Hair Hunters: você recebe as pistas antes de todo mundo, com o endereço dos pop-ups da sua cidade. De graça e sem compromisso.</p>
+    <div class="form-grid">
+      <div class="panel">
+        <form id="form" novalidate>
+          <div class="field">
+            <label for="nombre">Nome e sobrenome</label>
+            <input id="nombre" name="nombre" type="text" autocomplete="name" required>
+          </div>
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="voce@email.com" required>
+          </div>
+          <div class="row2">
+            <div class="field">
+              <label for="ciudad">Cidade</label>
+              <select id="ciudad" name="ciudad" required>
+                <option value="">Escolha uma</option>
+                <option>Rio de Janeiro</option>
+                <option>São Paulo</option>
+                <option>Outra, mas eu viajo</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="cabello">Seu cabelo</label>
+              <select id="cabello" name="cabello" required>
+                <option value="">Escolha um</option>
+                <option>Liso</option>
+                <option>Ondulado</option>
+                <option>Cacheado</option>
+                <option>Crespo</option>
+                <option>Com coloração ou descoloração</option>
+                <option>Não sei, é para isso que eu vou</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label for="perfil">Você trabalha com cabelo?</label>
+            <select id="perfil" name="perfil" required>
+              <option value="">Escolha uma</option>
+              <option>Sou cabeleireiro(a) ou colorista</option>
+              <option>Estudo cabeleireiro</option>
+              <option>Sou cliente de salão</option>
+            </select>
+          </div>
+          <label class="consent" for="consent">
+            <input id="consent" type="checkbox" required>
+            <span>Quero receber as pistas e o endereço dos pop-ups por e-mail.</span>
+          </label>
+          <button class="btn" id="submit" type="submit">Me manda as pistas</button>
+          <p class="msg" id="msg" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+      <aside class="side">
+        <h3 style="font-size:1.4rem">O que você recebe</h3>
+        <ul>
+          <li>A primeira pista 48 horas antes de abrir o pop-up mais perto de você.</li>
+          <li>Seu cartão de carimbos digital para marcar os pop-ups que caçar.</li>
+          <li>Seu diagnóstico de cabelo salvo, com a rotina de cuidado que você testou.</li>
+          <li>O aviso do convidado surpresa no dia da sunset party, se ganhar seu ingresso.</li>
+        </ul>
+        <div class="ticket" id="ticket">
+          <p class="eyebrow">Seu número de Hair Hunter</p>
+          <p class="code" id="ticket-code">—</p>
+          <p class="hint">Guarde: é o que pedem no primeiro pop-up.</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p class="disclaimer">Peça de conceito criada pela Achievers Lab (Universidad de los Andes) como exercício acadêmico de inovação. Hair Week é um conceito fictício: não representa nenhuma marca, e datas e locais fazem parte do experimento.</p>
+    <p>Hair Week · Rio de Janeiro + São Paulo</p>
+  </div>
+</footer>
+<script>
+/* ======================================================================
+   CONFIGURAÇÃO — cole aqui os dois valores do seu projeto Supabase.
+   Supabase > Project Settings > API:
+     SUPABASE_URL      = Project URL
+     SUPABASE_ANON_KEY = anon public key  (pode ficar visível; a segurança
+                         vem das policies de RLS, não da chave)
+   ====================================================================== */
+var SUPABASE_URL = "https://ijmkjcsfzjaibyxwmlee.supabase.co";
+var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlqbWtqY3NmemphaWJ5eHdtbGVlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwNTUyNTIsImV4cCI6MjEwOTYzMTI1Mn0.P3tqeKzcVCN3Dpu8qzZoXe1b2w9T_hAvcDW-28uIjZQ";
+/* ===================================================================== */
+
+(function(){
+  var countEl=document.getElementById('count');
+  var labelEl=document.getElementById('count-label');
+  var form=document.getElementById('form');
+  var msg=document.getElementById('msg');
+  var btn=document.getElementById('submit');
+  var ticket=document.getElementById('ticket');
+  var ticketCode=document.getElementById('ticket-code');
+  var total=0, sb=null;
+
+  var configurado = SUPABASE_URL.indexOf('http')===0 && SUPABASE_ANON_KEY.length>20;
+  if(configurado && window.supabase){
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
+  function renderCount(n){
+    total=n;
+    if(n>0){
+      countEl.textContent=String(n);
+      labelEl.textContent = n===1 ? 'Hair Hunter já está dentro' : 'Hair Hunters já estão dentro';
+    }else{
+      countEl.textContent='00';
+      labelEl.textContent='seja o primeiro Hair Hunter do Brasil';
+    }
+  }
+  renderCount(0);
+
+  function showError(t){ msg.className='msg err'; msg.textContent=t; }
+  function showOk(t){ msg.className='msg'; msg.textContent=t; }
+
+  function novoCodigo(){
+    return 'HW-'+String(Math.floor(Math.random()*9000)+1000);
+  }
+
+  function confirmState(c){
+    ticket.classList.add('on');
+    ticketCode.textContent=c;
+    btn.textContent='Você já é Hair Hunter';
+    btn.disabled=true;
+    try{ localStorage.setItem('hw_codigo', c); }catch(e){}
+  }
+
+  try{
+    var salvo=localStorage.getItem('hw_codigo');
+    if(salvo){ confirmState(salvo); }
+  }catch(e){}
+
+  function atualizarTotal(){
+    if(!sb) return;
+    sb.rpc('total_hair_hunters').then(function(r){
+      if(!r.error && typeof r.data==='number'){ renderCount(r.data); }
+    });
+  }
+  atualizarTotal();
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var nome=document.getElementById('nombre').value.trim();
+    var email=document.getElementById('email').value.trim().toLowerCase();
+    var cidade=document.getElementById('ciudad').value;
+    var cabelo=document.getElementById('cabello').value;
+    var perfil=document.getElementById('perfil').value;
+    var consent=document.getElementById('consent').checked;
+    if(!nome){ showError('Escreva seu nome para entrar nos Hair Hunters.'); return; }
+    if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){ showError('Confira o e-mail: é por ali que mandamos as pistas.'); return; }
+    if(!cidade||!cabelo||!perfil){ showError('Falta uma das respostas acima.'); return; }
+    if(!consent){ showError('Marque a caixa para a gente poder te enviar as pistas.'); return; }
+    if(!sb){ showError('O cadastro está fora do ar neste momento. Escreva para hairweek@achieverslab.co que a gente te inscreve.'); return; }
+
+    btn.disabled=true; showOk('Salvando seu passe de Hair Hunter…');
+    var codigo=novoCodigo();
+    sb.from('inscricoes').insert({
+      nome:nome, email:email, cidade:cidade, cabelo:cabelo, perfil:perfil, codigo:codigo
+    }).then(function(r){
+      if(r.error){
+        if(String(r.error.code)==='23505'){
+          showOk('Esse e-mail já está na caça. As pistas chegam para você do mesmo jeito.');
+          confirmState(codigo);
+          return;
+        }
+        btn.disabled=false;
+        showError('Não deu para salvar seu cadastro. Tente de novo em instantes.');
+        return;
+      }
+      showOk('Pronto, você é Hair Hunter: a primeira pista chega por e-mail.');
+      confirmState(codigo);
+      renderCount(total+1);
+      atualizarTotal();
+    });
+  });
+})();
+</script>
+</body>
+</html>
